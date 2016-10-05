@@ -104,6 +104,21 @@ int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
 	// Your code here.
+    cprintf("Stack backtrace\n");   
+    uint32_t bp=read_ebp();
+    
+   
+    while(bp!=0){
+    cprintf("  eip %08x  ebp %08x  args %08x %08x %08x %08x %08x\n", *((int *)(bp+4)),bp, *((int *)(bp+8)), *((int *)(bp+12)),
+     *((int *)(bp+16)), *((int *)(bp+20)), *((int *)(bp+24)), *((int *)(bp+28)));
+
+    bp=*((int *) bp);
+       
+
+  
+    }
+    
+    
     overflow_me();
     cprintf("Backtrace success\n");
 	return 0;

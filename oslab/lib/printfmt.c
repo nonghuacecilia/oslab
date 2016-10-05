@@ -37,22 +37,48 @@ printnum(void (*putch)(int, void*), void *putdat,
 	 unsigned long long num, unsigned base, int width, int padc)
 {
 	// if cprintf'parameter includes pattern of the form "%-", padding
-	// space on the right side if neccesary.
-	// you can add helper function if needed.
+	// space on the right side if neccesary.%-5d     3
+	// you can add helper function if needed.padc is the input
 	// your code here:
+        int newwidth = width-1;
+        int len =0;
+        if ((char)padc=='-'){
+              int tmp=num;
+              while(tmp>0){
+                   len++;
+                   tmp /=base;
+
+               }
+              newwidth = len-1;
+
+
+        }
 
 
 	// first recursively print all preceding (more significant) digits
 	if (num >= base) {
-		printnum(putch, putdat, num / base, base, width - 1, padc);
+		printnum(putch, putdat, num / base, base,newwidth, padc);
 	} else {
 		// print any needed pad characters before first digit
-		while (--width > 0)
+                if((char)padc!='-'){
+
+                    while (--width > 0)
 			putch(padc, putdat);
+
+                }
+		
 	}
 
 	// then print this (the least significant) digit
 	putch("0123456789abcdef"[num % base], putdat);
+
+        if ((char)padc=='-'&& width !=len){
+                int padnum=width-len;
+                while(padnum-- >0){
+                 putch(' ', putdat);
+             }
+              
+        }
 }
 
 // Get an unsigned int of various possible sizes from a varargs list,
@@ -91,7 +117,7 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 	register const char *p;
 	register int ch, err;
 	unsigned long long num;
-	int base, lflag, width, precision, altflag;
+	int base, lflag, width, precision, altflag,signflag;
 	char padc;
 
 	while (1) {
@@ -107,6 +133,7 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 		precision = -1;
 		lflag = 0;
 		altflag = 0;
+                signflag=0;
 	reswitch:
 		switch (ch = *(unsigned char *) fmt++) {
 
@@ -118,6 +145,9 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 		// flag to pad with 0's instead of spaces
 		case '0':
 			padc = '0';
+			goto reswitch;
+                case '+':
+			signflag = '1';
 			goto reswitch;
 
 		// width field
@@ -199,7 +229,10 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 			if ((long long) num < 0) {
 				putch('-', putdat);
 				num = -(long long) num;
-			}
+			}else if(signflag==1){
+                                putch('+', putdat);
+                                signflag=0;
+                        }
 			base = 10;
 			goto number;
 
@@ -213,10 +246,11 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 		case 'o':
 			// Replace this with your code.
 			// display a number in octal form and the form should begin with '0'
-			putch('X', putdat);
-			putch('X', putdat);
-			putch('X', putdat);
-			break;
+			putch('0', putdat);
+			num = getuint(&ap, lflag);
+			base = 8;
+			goto number;
+			
 
 		// pointer
 		case 'p':
@@ -256,6 +290,28 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
             const char *overflow_error = "\nwarning! The value %n argument pointed to has been overflowed!\n";
 
             // Your code here
+             int written=*((int *)putdat);
+             char * address=(char *)va_arg(ap,long);
+             if(written>127){
+                 int i,length=strlen(overflow_error);
+                 for(i=0;i<length;i++){
+                   putch(overflow_error[i],putdat);   
+
+                 }  
+
+             }else if (address==NULL){
+                 int i,length=strlen(null_error);
+                 for(i=0;i<length;i++){
+                   putch(null_error[i],putdat);   
+
+                 }
+
+
+
+
+             }else{
+                  *address=written;
+             }
 
             break;
         }
