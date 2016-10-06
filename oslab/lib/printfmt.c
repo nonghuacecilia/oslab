@@ -141,14 +141,14 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 		case '-':
 			padc = '-';
 			goto reswitch;
-			
+		 case '+':
+			signflag = '1';
+			goto reswitch;	
 		// flag to pad with 0's instead of spaces
 		case '0':
 			padc = '0';
 			goto reswitch;
-                case '+':
-			signflag = '1';
-			goto reswitch;
+               
 
 		// width field
 		case '1':
@@ -290,30 +290,20 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
             const char *overflow_error = "\nwarning! The value %n argument pointed to has been overflowed!\n";
 
             // Your code here
-             int written=*((int *)putdat);
-             char * address=(char *)va_arg(ap,long);
-             if(written>127){
-                 int i,length=strlen(overflow_error);
-                 for(i=0;i<length;i++){
-                   putch(overflow_error[i],putdat);   
-
-                 }  
-
-             }else if (address==NULL){
-                 int i,length=strlen(null_error);
-                 for(i=0;i<length;i++){
-                   putch(null_error[i],putdat);   
-
-                 }
-
-
-
-
-             }else{
-                  *address=written;
-             }
-
-            break;
+              char *pcnt = va_arg(ap, char *);
+	// arg point is null
+	if(!pcnt) {
+	printfmt(putch, putdat, "%s", null_error);
+	
+	}else {
+	// pudat is pointer to ch printed counter
+	*pcnt = *((char *)putdat);
+	// overflow!!!
+	if((*pcnt) < 0) {
+	printfmt(putch, putdat, "%s", overflow_error);
+	}
+	}
+	break;
         }
 
 		// escaped '%' character
